@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp -r /tmp/dashboard-nist/* /c/Users/akshi/Downloads/NIST-800-369-K12-Dashboard-Parent-Security-Communication-Security-Dashboard/ 2>&1 | head -20 && echo \"✓ Files synced\")"
+    ]
+  }
+}
