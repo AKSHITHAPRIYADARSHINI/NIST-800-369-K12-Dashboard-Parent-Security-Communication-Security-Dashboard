@@ -28,8 +28,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="mb-6">
             <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Home</p>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href="#home">
+              <SidebarMenuButton>
+                <a href="#home" className="flex items-center gap-2 w-full">
                   <Home className="h-4 w-4" />
                   <span>Home</span>
                 </a>
@@ -41,40 +41,40 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Main</p>
             <div className="space-y-2">
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive>
-                  <a href="#dashboard">
+                <SidebarMenuButton isActive>
+                  <a href="#dashboard" className="flex items-center gap-2 w-full">
                     <BarChart3 className="h-4 w-4" />
                     <span>Dashboard</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#compliance">
+                <SidebarMenuButton>
+                  <a href="#compliance" className="flex items-center gap-2 w-full">
                     <LayoutGrid className="h-4 w-4" />
                     <span>Compliance Status</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#controls">
+                <SidebarMenuButton>
+                  <a href="#controls" className="flex items-center gap-2 w-full">
                     <Settings className="h-4 w-4" />
                     <span>Security Controls</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#assets">
+                <SidebarMenuButton>
+                  <a href="#assets" className="flex items-center gap-2 w-full">
                     <FileText className="h-4 w-4" />
                     <span>Assets & Inventory</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#team">
+                <SidebarMenuButton>
+                  <a href="#team" className="flex items-center gap-2 w-full">
                     <Users className="h-4 w-4" />
                     <span>Team Management</span>
                   </a>
@@ -87,24 +87,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Documentation</p>
             <div className="space-y-2">
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#assessment">
+                <SidebarMenuButton>
+                  <a href="#assessment" className="flex items-center gap-2 w-full">
                     <FileText className="h-4 w-4" />
                     <span>Assessment Results</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#reports">
+                <SidebarMenuButton>
+                  <a href="#reports" className="flex items-center gap-2 w-full">
                     <BarChart3 className="h-4 w-4" />
                     <span>Compliance Reports</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="#policies">
+                <SidebarMenuButton>
+                  <a href="#policies" className="flex items-center gap-2 w-full">
                     <CheckSquare className="h-4 w-4" />
                     <span>Policies & Procedures</span>
                   </a>
@@ -114,8 +114,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </div>
 
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#more">
+            <SidebarMenuButton>
+              <a href="#more" className="flex items-center gap-2 w-full">
                 <MoreHorizontal className="h-4 w-4" />
                 <span>More</span>
               </a>
@@ -126,16 +126,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#settings">
+            <SidebarMenuButton>
+              <a href="#settings" className="flex items-center gap-2 w-full">
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#admin" className="flex items-center gap-3">
+            <SidebarMenuButton>
+              <a href="#admin" className="flex items-center gap-3 w-full">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
                   A
                 </div>

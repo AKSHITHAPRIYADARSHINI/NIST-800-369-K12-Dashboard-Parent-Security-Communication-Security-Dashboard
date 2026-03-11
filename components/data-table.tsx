@@ -42,6 +42,18 @@ import { z } from "zod"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { exportToCSV, printReport } from "@/lib/export-utils"
+import { MetricsDashboard } from "@/components/metrics-dashboard"
+import { ParentSecuritySummary } from "@/components/parent-security-summary"
+import { VendorRiskDashboard } from "@/components/vendor-risk-dashboard"
+import { NISTMappingTable } from "@/components/nist-mapping-table"
+import { ComplianceScorer } from "@/components/compliance-scorer"
+import type { UserRole } from "@/lib/nist-mock-data"
+
+interface DataTableProps {
+  data: z.infer<typeof schema>[]
+  role?: UserRole
+}
 import {
   ChartContainer,
   ChartTooltip,
@@ -92,7 +104,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { GripVerticalIcon, CircleCheckIcon, LoaderIcon, EllipsisVerticalIcon, Columns3Icon, ChevronDownIcon, PlusIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, TrendingUpIcon } from "lucide-react"
+import { GripVerticalIcon, CircleCheckIcon, LoaderIcon, EllipsisVerticalIcon, Columns3Icon, ChevronDownIcon, PlusIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, TrendingUpIcon, Download, Printer } from "lucide-react"
 
 export const schema = z.object({
   id: z.number(),
@@ -331,9 +343,8 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 }
 export function DataTable({
   data: initialData,
-}: {
-  data: z.infer<typeof schema>[]
-}) {
+  role = "admin",
+}: DataTableProps) {
   const [data, setData] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -395,83 +406,159 @@ export function DataTable({
       defaultValue="outline"
       className="w-full flex-col justify-start gap-6"
     >
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select
-          defaultValue="outline"
-          items={[
-            { label: "Outline", value: "outline" },
-            { label: "Past Performance", value: "past-performance" },
-            { label: "Key Personnel", value: "key-personnel" },
-            { label: "Focus Documents", value: "focus-documents" },
-          ]}
-        >
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="outline">Outline</SelectItem>
-              <SelectItem value="past-performance">Past Performance</SelectItem>
-              <SelectItem value="key-personnel">Key Personnel</SelectItem>
-              <SelectItem value="focus-documents">Focus Documents</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<Button variant="outline" size="sm" />}
-            >
-              <Columns3Icon data-icon="inline-start" />
-              Columns
-              <ChevronDownIcon data-icon="inline-end" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  )
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon
+      <div className="flex flex-col gap-4 px-4 lg:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 gap-2">
+            <Input
+              placeholder="Search controls..."
+              value={(table.getColumn("header")?.getFilterValue() as string) ?? ""}
+              onChange={(event) =>
+                table.getColumn("header")?.setFilterValue(event.target.value)
+              }
+              className="h-9 max-w-xs"
             />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
+            <Select
+              value={(table.getColumn("status")?.getFilterValue() as string) ?? ""}
+              onValueChange={(value) =>
+                table.getColumn("status")?.setFilterValue(value || undefined)
+              }
+              items={[
+                { label: "All Status", value: "" },
+                { label: "Done", value: "Done" },
+                { label: "In Process", value: "In Process" },
+              ]}
+            >
+              <SelectTrigger className="h-9 w-40" size="sm">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="">All Status</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                  <SelectItem value="In Process">In Process</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select
+              value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
+              onValueChange={(value) =>
+                table.getColumn("type")?.setFilterValue(value || undefined)
+              }
+              items={[
+                { label: "All Types", value: "" },
+                { label: "Technical", value: "Technical" },
+                { label: "Administrative", value: "Administrative" },
+                { label: "Physical", value: "Physical" },
+                { label: "Legal", value: "Legal" },
+                { label: "Planning", value: "Planning" },
+              ]}
+            >
+              <SelectTrigger className="h-9 w-40" size="sm">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="Technical">Technical</SelectItem>
+                  <SelectItem value="Administrative">Administrative</SelectItem>
+                  <SelectItem value="Physical">Physical</SelectItem>
+                  <SelectItem value="Legal">Legal</SelectItem>
+                  <SelectItem value="Planning">Planning</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const filteredData = table.getFilteredRowModel().rows.map((r) => r.original)
+                exportToCSV(filteredData, "nist-controls-export.csv")
+                toast.success("Exported to CSV")
+              }}
+            >
+              <Download className="mr-2 size-4" />
+              Export CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={printReport}>
+              <Printer className="mr-2 size-4" />
+              Print
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="outline" size="sm" />}
+              >
+                <Columns3Icon data-icon="inline-start" />
+                Columns
+                <ChevronDownIcon data-icon="inline-end" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      typeof column.accessorFn !== "undefined" &&
+                      column.getCanHide()
+                  )
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Label htmlFor="view-selector" className="sr-only">
+            View
+          </Label>
+          <Select
+            defaultValue="outline"
+            items={[
+              { label: "Outline", value: "outline" },
+              { label: "Past Performance", value: "past-performance" },
+              { label: "Key Personnel", value: "key-personnel" },
+              { label: "Focus Documents", value: "focus-documents" },
+            ]}
+          >
+            <SelectTrigger
+              className="flex w-fit @4xl/main:hidden"
+              size="sm"
+              id="view-selector"
+            >
+              <SelectValue placeholder="Select a view" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="past-performance">Past Performance</SelectItem>
+                <SelectItem value="key-personnel">Key Personnel</SelectItem>
+                <SelectItem value="focus-documents">Focus Documents</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
+            <TabsTrigger value="outline">Outline</TabsTrigger>
+            <TabsTrigger value="past-performance">
+              Past Performance <Badge variant="secondary">3</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="key-personnel">
+              Key Personnel <Badge variant="secondary">2</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
+          </TabsList>
         </div>
       </div>
       <TabsContent
@@ -619,18 +706,35 @@ export function DataTable({
       </TabsContent>
       <TabsContent
         value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
+        className="flex flex-col gap-6 px-4 lg:px-6 py-4"
       >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+        {role === "parent" ? (
+          <ParentSecuritySummary />
+        ) : (
+          <MetricsDashboard />
+        )}
       </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+      <TabsContent value="key-personnel" className="flex flex-col gap-6 px-4 lg:px-6 py-4">
+        <VendorRiskDashboard />
       </TabsContent>
       <TabsContent
         value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
+        className="flex flex-col gap-6 px-4 lg:px-6 py-4"
       >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+        <Tabs defaultValue="mapping" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="mapping">NIST Framework Mapping</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance Scoring</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="mapping" className="mt-4 space-y-4">
+            <NISTMappingTable />
+          </TabsContent>
+
+          <TabsContent value="compliance" className="mt-4 space-y-4">
+            <ComplianceScorer />
+          </TabsContent>
+        </Tabs>
       </TabsContent>
     </Tabs>
   )
@@ -681,7 +785,9 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile()
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger render={<Button variant="link" className="w-fit px-0 text-left text-foreground" />}>{item.header}</DrawerTrigger>
+      <DrawerTrigger asChild>
+        <Button variant="link" className="w-fit px-0 text-left text-foreground">{item.header}</Button>
+      </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.header}</DrawerTitle>
@@ -857,7 +963,9 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         </div>
         <DrawerFooter>
           <Button>Submit</Button>
-          <DrawerClose render={<Button variant="outline" />}></DrawerClose>
+          <DrawerClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DrawerClose>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

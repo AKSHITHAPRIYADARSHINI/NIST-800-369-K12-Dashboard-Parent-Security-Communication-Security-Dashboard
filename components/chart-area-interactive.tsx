@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   Card,
@@ -13,39 +14,66 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { TREND_DATA, getTimeRangeData, type ChartDataPoint, type UserRole } from "@/lib/nist-mock-data"
 
-const chartData = [
-  { date: "Jan 1", Compliance: 75, Security: 68, Protection: 72 },
-  { date: "Jan 7", Compliance: 78, Security: 71, Protection: 75 },
-  { date: "Jan 14", Compliance: 80, Security: 73, Protection: 77 },
-  { date: "Jan 21", Compliance: 82, Security: 75, Protection: 79 },
-  { date: "Jan 28", Compliance: 84, Security: 77, Protection: 81 },
-  { date: "Feb 4", Compliance: 85, Security: 79, Protection: 83 },
-  { date: "Feb 11", Compliance: 86, Security: 80, Protection: 84 },
-  { date: "Feb 18", Compliance: 87, Security: 82, Protection: 85 },
-  { date: "Feb 25", Compliance: 87, Security: 82, Protection: 86 },
-]
+interface ChartAreaInteractiveProps {
+  chartData?: ChartDataPoint[]
+  role?: UserRole
+}
 
-export function ChartAreaInteractive() {
+export function ChartAreaInteractive({ chartData = TREND_DATA, role = "admin" }: ChartAreaInteractiveProps) {
+  const [timeRange, setTimeRange] = useState<"30" | "90">("90")
+  const filteredData = getTimeRangeData(chartData, timeRange === "30" ? 30 : 90)
+  const chartConfig = {
+    Compliance: { label: "Compliance Score", color: "hsl(var(--chart-1))" },
+    Security: { label: "Security Score", color: "hsl(var(--chart-2))" },
+    Protection: { label: "Protection Score", color: "hsl(var(--chart-3))" },
+  }
+
+  const chartTitle = role === "parent"
+    ? "Data Protection Trend"
+    : "Security Posture Trend"
+
+  const chartDescription = role === "parent"
+    ? "K-12 school data protection and compliance overview"
+    : "NIST 800-369 compliance, security, and data protection scores over time"
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Security Posture Trend</CardTitle>
-        <CardDescription>
-          NIST 800-369 compliance, security, and data protection scores over time
-        </CardDescription>
+      <CardHeader className="flex items-center justify-between">
+        <div>
+          <CardTitle>{chartTitle}</CardTitle>
+          <CardDescription>
+            {chartDescription}
+          </CardDescription>
+        </div>
+        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as "30" | "90")}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         <ChartContainer
-          config={{
-            Compliance: { label: "Compliance Score", color: "hsl(var(--chart-1))" },
-            Security: { label: "Security Score", color: "hsl(var(--chart-2))" },
-            Protection: { label: "Protection Score", color: "hsl(var(--chart-3))" },
-          }}
+          config={chartConfig}
           className="aspect-auto h-[310px] w-full"
         >
           <AreaChart
-            data={chartData}
+            data={filteredData}
             margin={{
               left: 12,
               right: 12,
@@ -64,13 +92,15 @@ export function ChartAreaInteractive() {
               stroke="var(--color-Compliance)"
               fillOpacity={0.4}
             />
-            <Area
-              dataKey="Security"
-              type="natural"
-              fill="var(--color-Security)"
-              stroke="var(--color-Security)"
-              fillOpacity={0.4}
-            />
+            {role !== "parent" && (
+              <Area
+                dataKey="Security"
+                type="natural"
+                fill="var(--color-Security)"
+                stroke="var(--color-Security)"
+                fillOpacity={0.4}
+              />
+            )}
             <Area
               dataKey="Protection"
               type="natural"
