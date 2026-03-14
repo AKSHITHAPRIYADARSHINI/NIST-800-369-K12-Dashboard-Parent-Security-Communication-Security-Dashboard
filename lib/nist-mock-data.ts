@@ -675,3 +675,190 @@ export function getTimeRangeData(data: ChartDataPoint[], days: 30 | 90): ChartDa
   if (days === 90) return data
   return data.slice(-4) // Last ~30 days (4 weeks)
 }
+
+export type ThresholdLabel = "Strong" | "Moderate" | "Needs Improvement" | "High Risk"
+
+export function getThreshold(score: number): ThresholdLabel {
+  if (score >= 90) return "Strong"
+  if (score >= 75) return "Moderate"
+  if (score >= 60) return "Needs Improvement"
+  return "High Risk"
+}
+
+export interface VendorFull {
+  id: number
+  name: string
+  service: string
+  dataSensitivity: "High" | "Medium" | "Low"
+  riskRating: "Critical" | "High" | "Medium" | "Low"
+  riskStatus: "At Risk" | "Under Review" | "Approved"
+  contractStatus: "Active" | "Expired" | "Pending"
+  contractExpiry: string
+  lastReview: string
+  dataAccess: string
+  notes: string
+}
+
+export interface DevicePosture {
+  total: number
+  compliant: number
+  patchPercentage: number
+  antivirusPercentage: number
+  highRiskDevices: DeviceEntry[]
+}
+
+export interface DeviceEntry {
+  deviceId: string
+  deviceName: string
+  os: string
+  lastPatchDate: string
+  patchStatus: "Up to Date" | "Overdue" | "Critical"
+  riskLevel: "Critical" | "High" | "Medium"
+}
+
+export interface TeacherStatus {
+  name: string
+  mfaEnabled: boolean
+  passwordStatus: "Current" | "Expired Soon" | "Expired"
+  lastLogin: string
+  deviceCompliance: number
+  trainingProgress: number
+}
+
+export interface RemediationItem {
+  id: number
+  title: string
+  domain: string
+  dueDate: string
+  owner: string
+  status: "Overdue" | "Due Soon" | "On Track"
+  priority: "Critical" | "High" | "Medium"
+}
+
+export interface IncidentEvent {
+  id: number
+  date: string
+  title: string
+  type: string
+  severity: "Critical" | "High" | "Medium" | "Low"
+  status: "Open" | "Investigating" | "Resolved"
+  mttr: string
+}
+
+export interface IncidentTrendPoint {
+  week: string
+  Critical: number
+  High: number
+  Medium: number
+  Low: number
+}
+
+export interface AdminUser {
+  id: number
+  name: string
+  email: string
+  role: "admin" | "teacher" | "staff" | "parent"
+  mfaEnabled: boolean
+  mfaMethod: "TOTP" | "SMS" | "Email" | "None"
+  lastLogin: string
+  status: "Active" | "Suspended" | "Pending"
+  department: string
+  createdAt: string
+}
+
+export interface MFAEnforcementRecord {
+  department: string
+  total: number
+  enrolled: number
+  exempt: number
+  pending: number
+}
+
+export interface ManagedDevice {
+  id: string
+  name: string
+  type: "Laptop" | "Desktop" | "iPad" | "Chromebook" | "Server"
+  os: string
+  assignedTo: string
+  department: string
+  lastSeen: string
+  patchStatus: "Up to Date" | "Overdue" | "Critical"
+  encryptionStatus: "Enabled" | "Disabled" | "Partial"
+  antivirusStatus: "Active" | "Outdated" | "Missing"
+  riskScore: number
+  riskLevel: "Critical" | "High" | "Medium" | "Low"
+}
+
+export interface VendorAssessment {
+  vendorId: number
+  vendorName: string
+  assessmentDate: string
+  assessor: string
+  ferpaCompliant: boolean
+  coppaCompliant: boolean
+  soc2Certified: boolean
+  penetrationTested: boolean
+  dataEncryption: string
+  dataResidency: string
+  breachHistory: boolean
+  overallScore: number
+  recommendation: "Approve" | "Conditional" | "Reject" | "Reassess"
+  nextReview: string
+  findings: string
+}
+
+export interface ActiveIncident {
+  id: number
+  title: string
+  type: string
+  severity: "Critical" | "High" | "Medium" | "Low"
+  status: "Open" | "Investigating" | "Contained" | "Remediating"
+  assignee: string
+  reportedAt: string
+  affectedSystems: string
+  affectedUsers: number
+  timeline: string
+  nextAction: string
+}
+
+export interface AccessLogEntry {
+  id: number
+  timestamp: string
+  user: string
+  role: string
+  action: string
+  resource: string
+  ipAddress: string
+  location: string
+  result: "Success" | "Failed" | "Blocked"
+  riskFlag: boolean
+}
+
+export interface SecurityPolicy {
+  id: number
+  name: string
+  category:
+    | "Authentication"
+    | "Data Protection"
+    | "Network"
+    | "Device"
+    | "Incident Response"
+    | "Vendor"
+  status: "Active" | "Draft" | "Under Review" | "Deprecated"
+  lastUpdated: string
+  owner: string
+  reviewCycle: string
+  nextReview: string
+  version: string
+  applicableTo: string
+  summary: string
+}
+
+export interface SecurityScorePoint {
+  month: string
+  Authentication: number
+  DeviceSecurity: number
+  DataProtection: number
+  VendorRisk: number
+  IncidentResponse: number
+}

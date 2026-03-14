@@ -1,8 +1,8 @@
-import type { SecurityIncident } from "./nist-mock-data"
+export function exportToCSV(data: any[], filename: string = "export.csv") {
+  if (data.length === 0) return
 
-export function exportToCSV(data: SecurityIncident[], filename: string = "nist-controls.csv") {
-  const headers = ["ID", "Control", "Category", "Status", "Target", "Score", "Reviewer"]
-  const rows = data.map((d) => [d.id, d.header, d.type, d.status, d.target, d.limit, d.reviewer])
+  const headers = Object.keys(data[0])
+  const rows = data.map((d) => headers.map((h) => d[h] ?? ""))
 
   const csv = [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n")
 
