@@ -1,153 +1,329 @@
 "use client"
 
-import { BarChart3, CheckSquare, Home, LayoutGrid, Settings, Users, FileText, MoreHorizontal } from "lucide-react"
+import * as React from "react"
+import { Shield, LogOut, User } from "lucide-react"
+import Link from "next/link"
+import { useRouter, usePathname } from "next/navigation"
+import { toast } from "sonner"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarRail,
+  SidebarFooter,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface NavItem {
+  title: string
+  url: string
+  icon?: React.ReactNode
+  isActive?: boolean
+}
+
+interface NavSection {
+  title: string
+  url?: string
+  items?: NavItem[]
+}
+
+// Role-based navigation data
+const getNavigationByRole = (role: string): NavSection[] => {
+  switch (role) {
+    case "parent":
+      return [
+        {
+          title: "Home",
+          url: "/dashboard",
+          items: [
+            { title: "Dashboard", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Student Data",
+          url: "#",
+          items: [
+            { title: "Data Protection", url: "/dashboard" },
+            { title: "Privacy Practices", url: "/dashboard" },
+            { title: "FERPA Information", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Learning Systems",
+          url: "#",
+          items: [
+            { title: "Approved Apps", url: "/dashboard" },
+            { title: "Platform Security", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Cybersecurity",
+          url: "#",
+          items: [
+            { title: "Login Protection", url: "/dashboard" },
+            { title: "Threat Monitoring", url: "/dashboard" },
+            { title: "Device Protection", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Alerts & Updates",
+          url: "#",
+          items: [
+            { title: "Incident Updates", url: "/dashboard" },
+            { title: "Security Resources", url: "/dashboard" },
+          ],
+        },
+      ]
+
+    case "teacher":
+      return [
+        {
+          title: "Home",
+          url: "/dashboard",
+          items: [
+            { title: "Dashboard", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "My Security",
+          url: "#",
+          items: [
+            { title: "Security Status", url: "/dashboard" },
+            { title: "MFA Settings", url: "/dashboard" },
+            { title: "Device Compliance", url: "/dashboard" },
+            { title: "Training Progress", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Classroom",
+          url: "#",
+          items: [
+            { title: "Approved Tools", url: "/dashboard" },
+            { title: "Vendor Security", url: "/dashboard" },
+            { title: "Restricted Apps", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Data Handling",
+          url: "#",
+          items: [
+            { title: "Best Practices", url: "/dashboard" },
+            { title: "Data Classification", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Reporting",
+          url: "#",
+          items: [
+            { title: "Report Phishing", url: "/dashboard" },
+            { title: "Report Incident", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Alerts & Training",
+          url: "#",
+          items: [
+            { title: "Security Alerts", url: "/dashboard" },
+            { title: "Awareness Training", url: "/dashboard" },
+          ],
+        },
+      ]
+
+    case "admin":
+      return [
+        {
+          title: "Home",
+          url: "/dashboard",
+          items: [
+            { title: "Dashboard", url: "/dashboard" },
+          ],
+        },
+        {
+          title: "Analytics",
+          url: "#",
+          items: [
+            { title: "Security Overview", url: "/dashboard/security-overview" },
+            { title: "Authentication", url: "/dashboard/users/mfa" },
+            { title: "Device Security", url: "/dashboard/devices" },
+            { title: "Incident Trends", url: "/dashboard/incidents/active" },
+          ],
+        },
+        {
+          title: "Compliance",
+          url: "#",
+          items: [
+            { title: "NIST 800-369", url: "/dashboard/compliance" },
+            { title: "Control Mapping", url: "/dashboard/compliance/control-mapping" },
+            { title: "Compliance Score", url: "/dashboard/compliance" },
+            { title: "Assessment", url: "/dashboard/compliance" },
+          ],
+        },
+        {
+          title: "User Management",
+          url: "#",
+          items: [
+            { title: "Manage Users", url: "/dashboard/users" },
+            { title: "Assign Roles", url: "/dashboard/users/roles" },
+            { title: "IAM Policies", url: "/dashboard/settings/policies" },
+            { title: "MFA Enforcement", url: "/dashboard/users/mfa" },
+          ],
+        },
+        {
+          title: "Devices & Endpoints",
+          url: "#",
+          items: [
+            { title: "Managed Devices", url: "/dashboard/devices" },
+            { title: "Compliance Status", url: "/dashboard/devices" },
+            { title: "Risk Alerts", url: "/dashboard/devices" },
+          ],
+        },
+        {
+          title: "Vendor Security",
+          url: "#",
+          items: [
+            { title: "Vendor Assessment", url: "/dashboard/vendors/assessment" },
+            { title: "Risk Scoring", url: "/dashboard/vendors/assessment" },
+            { title: "EdTech Security", url: "/dashboard/vendors/assessment" },
+          ],
+        },
+        {
+          title: "Incident Response",
+          url: "#",
+          items: [
+            { title: "Active Incidents", url: "/dashboard/incidents/active" },
+            { title: "Timeline", url: "/dashboard/incidents/active" },
+            { title: "Response Status", url: "/dashboard/incidents/active" },
+          ],
+        },
+        {
+          title: "Reports & Audit",
+          url: "#",
+          items: [
+            { title: "Security Reports", url: "/dashboard/reports/access-logs" },
+            { title: "Compliance Reports", url: "/dashboard/reports/access-logs" },
+            { title: "Access Logs", url: "/dashboard/reports/access-logs" },
+            { title: "Audit Trail", url: "/dashboard/reports/access-logs" },
+          ],
+        },
+        {
+          title: "Settings",
+          url: "#",
+          items: [
+            { title: "Security Policies", url: "/dashboard/settings/policies" },
+            { title: "System Settings", url: "/dashboard/settings/policies" },
+          ],
+        },
+      ]
+
+    default:
+      return []
+  }
+}
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  userRole?: string
+}
+
+export function AppSidebar({ userRole = "admin", ...props }: AppSidebarProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const navigation = getNavigationByRole(userRole)
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
+
+  async function handleLogout() {
+    setIsLoggingOut(true)
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" })
+      if (response.ok) {
+        toast.success("Logged out successfully")
+        router.push("/auth/login")
+      }
+    } catch (error) {
+      toast.error("Logout failed")
+      setIsLoggingOut(false)
+    }
+  }
+
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      parent: "Parent Portal",
+      teacher: "Teacher Dashboard",
+      admin: "Admin Console",
+    }
+    return labels[role] || "Dashboard"
+  }
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            🛡️
-          </div>
-          <span className="font-semibold">NIST 800-369</span>
-        </div>
-      </SidebarHeader>
-      <SidebarContent>
         <SidebarMenu>
-          <div className="mb-6">
-            <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Home</p>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <a href="#home" className="flex items-center gap-2 w-full">
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </div>
-
-          <div className="mb-6">
-            <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Main</p>
-            <div className="space-y-2">
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive>
-                  <a href="#dashboard" className="flex items-center gap-2 w-full">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Dashboard</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#compliance" className="flex items-center gap-2 w-full">
-                    <LayoutGrid className="h-4 w-4" />
-                    <span>Compliance Status</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#controls" className="flex items-center gap-2 w-full">
-                    <Settings className="h-4 w-4" />
-                    <span>Security Controls</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#assets" className="flex items-center gap-2 w-full">
-                    <FileText className="h-4 w-4" />
-                    <span>Assets & Inventory</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#team" className="flex items-center gap-2 w-full">
-                    <Users className="h-4 w-4" />
-                    <span>Team Management</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <p className="px-2 py-2 text-xs font-semibold text-muted-foreground">Documentation</p>
-            <div className="space-y-2">
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#assessment" className="flex items-center gap-2 w-full">
-                    <FileText className="h-4 w-4" />
-                    <span>Assessment Results</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#reports" className="flex items-center gap-2 w-full">
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Compliance Reports</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <a href="#policies" className="flex items-center gap-2 w-full">
-                    <CheckSquare className="h-4 w-4" />
-                    <span>Policies & Procedures</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </div>
-          </div>
-
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <a href="#more" className="flex items-center gap-2 w-full">
-                <MoreHorizontal className="h-4 w-4" />
-                <span>More</span>
-              </a>
+            <SidebarMenuButton size="lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Shield className="size-4" />
+              </div>
+              <div className="flex flex-col gap-0.5 leading-none">
+                <span className="font-semibold">NIST 800-369</span>
+                <span className="text-xs">{getRoleLabel(userRole)}</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            {navigation.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton className="font-medium" onClick={() => item.url && item.url !== "#" && (window.location.href = item.url)}>
+                  {item.title}
+                </SidebarMenuButton>
+                {item.items?.length ? (
+                  <SidebarMenuSub>
+                    {item.items.map((subItem) => (
+                      <SidebarMenuSubItem key={subItem.title}>
+                        <SidebarMenuSubButton isActive={pathname === subItem.url} onClick={() => router.push(subItem.url)}>
+                          {subItem.title}
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    ))}
+                  </SidebarMenuSub>
+                ) : null}
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarSeparator />
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <a href="#settings" className="flex items-center gap-2 w-full">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </a>
+            <SidebarMenuButton onClick={() => router.push("/dashboard/profile")}>
+              <User className="size-4" />
+              <span>Profile</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <a href="#admin" className="flex items-center gap-3 w-full">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
-                  A
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Admin</span>
-                  <span className="truncate text-xs">security@k12.edu</span>
-                </div>
-              </a>
+            <SidebarMenuButton onClick={handleLogout} disabled={isLoggingOut}>
+              <LogOut className="size-4" />
+              <span>{isLoggingOut ? "Logging out..." : "Logout"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
   )
 }
